@@ -10,3 +10,8 @@ What packages you're going to need to have installed for this to work properly:
     * python3-pyqt5
 
 This package doesn't have an installer so if you want it to start automatically when you log into your computer you'll have to set it up yourself. It should be pretty simple though, just make sure the script is executable (`chmod +x rsi.py` on Linux) and configure it to be called on system startup - how to go about doing ot from system to system but all of them have a Autostart option which should be easy to set up(on KDE, for example just go to System Settings -> Startup and Shutdown -> Autostart). For other systems please search for an easy guid on Google or ask for help on your system's website, forum or mailing list.
+
+Other suggested RSI prevention tools, much more professional than PyRsi:
+
+RSIBreak (for Linux) - easy to find and install via your distribution's package manager
+Workrave (mainly for Windows) - http://www.workrave.org/download/
