@@ -5,13 +5,15 @@ It also offers 2:1. 1:1 and 1:2 options on startup if you want to be more lax or
 This is currently a Linux-only tool and takes into consideration gamepad activity and time ellapsed while the computer is suspended. It should be easy to port to other systems as long as you have Qt installed - if you do so or need help doing it let me know and I'll happily add your changes to the main project for the benefit of others.
 
 What packages you're going to need to have installed for this to work properly:
-    * Python 3
-    * xprintidle
-    * python3-pyqt5
+
+* Python 3
+* xprintidle
+* python3-pyqt5
 
 This package doesn't have an installer so if you want it to start automatically when you log into your computer you'll have to set it up yourself. It should be pretty simple though, just make sure the script is executable (`chmod +x rsi.py` on Linux) and configure it to be called on system startup - how to go about doing it varies from system to system but all of them have an Autostart option which should be easy to set up (on KDE, for example just go to System Settings -> Startup and Shutdown -> Autostart). For other systems just do a quick search on Google or ask for help on your system's website, forum, mailing list or similar.
 
 Other suggested RSI prevention tools, much more professional than PyRsi:
 
 RSIBreak (for Linux) - easy to find and install via your distribution's package manager
+
 Workrave (mainly for Windows) - http://www.workrave.org/download/
