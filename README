@@ -1,0 +1,12 @@
+PyRsi is a unique RSI prevention tool. Instead of working with short and long rest intervals as most applications do, it simply keeps track of the time you've been using the computer since it was turned on and will periodically notify you that you should rest for that given time as well. It will then decrease the counter based on how much time you've spent away from your computer (or at least not interacting with it).
+
+It also offers 2:1. 1:1 and 1:2 options on startup if you want to be more lax or strict with your rest periods. This is meant to be used on the beginning of a work day (or work session) if your hands, wrists or arms are already feeling tired or if you have a lot of work to do and is willing to compromise having less time to rest, etc.
+
+This is currently a Linux-only tool and takes into consideration gamepad activity and time elapsed while the computer is suspended. It should be easy to port to other systems as long as you have Qt installed - if you do so or need help doing it let me know and I'll happily add your changes to the main project for the benefit of others.
+
+What packages you're going to need to have installed for this to work properly:
+    * Python 3
+    * xprintidle
+    * python3-pyqt5
+
+This package doesn't have an installer so if you want it to start automatically when you log into your computer you'll have to set it up yourself. It should be pretty simple though, just make sure the script is executable (`chmod +x rsi.py` on Linux) and configure it to be called on system startup - how to go about doing ot from system to system but all of them have a Autostart option which should be easy to set up(on KDE, for example just go to System Settings -> Startup and Shutdown -> Autostart). For other systems please search for an easy guid on Google or ask for help on your system's website, forum or mailing list.
