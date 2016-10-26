@@ -14,6 +14,5 @@ This package doesn't have an installer so if you want it to start automatically 
 
 Other suggested RSI prevention tools, much more professional than PyRsi:
 
-RSIBreak (for Linux) - easy to find and install via your distribution's package manager
-
-Workrave (mainly for Windows) - http://www.workrave.org/download/
+* RSIBreak (for Linux) - easy to find and install via your distribution's package manager
+* Workrave (mainly for Windows) - http://www.workrave.org/download/
