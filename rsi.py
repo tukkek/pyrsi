@@ -37,13 +37,11 @@ class Frame(QWidget):
     def moretime(self):
         global pool
         pool+=10*60
-        update()
     def lesstime(self):
         global pool
         pool-=10*60
         if pool<0:
             pool=0
-        update()
     def addbuton(self,label,layout,action):
         b=QPushButton(label)
         layout.addWidget(b)
