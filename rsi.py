@@ -28,12 +28,27 @@ class Frame(QWidget):
         severe=QRadioButton("Severe (1:2)")
         leniency.addButton(severe)
         layout.addWidget(severe)
-        #close button
-        close=QPushButton("Hide")
-        layout.addWidget(close)
-        close.clicked.connect(self.totray)
+        #add / remove time
+        self.addbuton("Add 10 minutes",layout,self.moretime)
+        self.addbuton("Remove 10 minutes",layout,self.lesstime)
+        #hide to tray
+        self.addbuton("Hide",layout,self.totray)
         self.setLayout(layout)
-        #self.show()
+    def moretime(self):
+        global pool
+        pool+=10*60
+        update()
+    def lesstime(self):
+        global pool
+        pool-=10*60
+        if pool<0:
+            pool=0
+        update()
+    def addbuton(self,label,layout,action):
+        b=QPushButton(label)
+        layout.addWidget(b)
+        b.clicked.connect(action)
+        return b
     def closeEvent(self, event): #fired on window closed
         if QMessageBox.question(self,'Exit','Are you sure you want to disable PyRsi?', QMessageBox.Yes, QMessageBox.No)==QMessageBox.Yes:
             global terminate
@@ -116,15 +131,16 @@ def describe():
     if pool==0:
         return 'All rested up!'
     if pool>=60*60:
-        return 'Rest for '+str(int(pool/(60*60)))+' hour(s)'
+        return 'Rest for '+str(round(pool/(60*60)))+' hour(s)'
     if pool>=60:
-        return 'Rest for '+str(int(pool/60))+' minute(s)'
-    return 'Rest for '+str(int(pool))+' second(s)'
+        return 'Rest for '+str(round(pool/60))+' minute(s)'
+    return 'Rest for '+str(round(pool))+' second(s)'
 
 def popup():
     if terminate:
         return
-    tray.showMessage('PyRsi',describe(),msecs=5*1000)
+    if pool!=0:
+        tray.showMessage('PyRsi',describe(),msecs=5*1000)
     setpopup()
     
 def setpopup():
