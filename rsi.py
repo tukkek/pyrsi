@@ -75,7 +75,7 @@ class Frame(QWidget):
         frameGm.moveCenter(centerPoint)
         self.move(frameGm.topLeft())
 
-joystick=os.open(JOYSTICK,os.O_RDONLY|os.O_NONBLOCK) if os.path.isfile(JOYSTICK) else False
+joystick=os.open(JOYSTICK,os.O_RDONLY|os.O_NONBLOCK) if os.path.exists(JOYSTICK) else False
 lastjoystick=time.time()
 joystickthread=False
 
@@ -146,7 +146,7 @@ def setpopup():
     popupthread=threading.Timer(5*60,popup)
     popupthread.start()
     
-if joystickthread!=False:
+if joystick!=False:
     joystickthread=threading.Thread(target=watchjoystick)
     joystickthread.start()
 window=Frame()
