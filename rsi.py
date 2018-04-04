@@ -1,10 +1,12 @@
 #!/usr/bin/python3
-import time,threading,os,subprocess,sys
+import time,threading,os,subprocess,sys,configparser
 from PyQt5.QtWidgets import QApplication,QWidget,QLabel,QPushButton,QVBoxLayout,QRadioButton,QButtonGroup,QSystemTrayIcon,QMessageBox
 from PyQt5.QtGui import QIcon
+from pathlib import Path
 
 JOYSTICK='/dev/input/js0'
-LENIENCY=[.5,1,2]
+LENIENCY=[.5,1,1.5,2]
+SAVEPERIOD=60
 
 class Frame(QWidget):
     def __init__(self):
@@ -22,12 +24,19 @@ class Frame(QWidget):
         leniency.addButton(lax)
         layout.addWidget(lax)
         normal=QRadioButton("Normal (1:1)")
-        normal.setChecked(True)
         leniency.addButton(normal)
         layout.addWidget(normal)
+        normal.setChecked(True)
+        cautious=QRadioButton("Cautious (2:3)")
+        leniency.addButton(cautious)
+        layout.addWidget(cautious)
         severe=QRadioButton("Severe (1:2)")
         leniency.addButton(severe)
         layout.addWidget(severe)
+        if 'data' in config:
+            #print('leniency: '+str(int(config['data']['leniency'])))
+            #print(leniency.buttons()[int(config['data']['leniency'])])
+            leniency.buttons()[int(config['data']['leniency'])].setChecked(True)
         #add / remove time
         self.addbuton("Add 10 minutes",layout,self.moretime)
         self.addbuton("Remove 10 minutes",layout,self.lesstime)
@@ -74,6 +83,8 @@ class Frame(QWidget):
         centerPoint = d.screenGeometry(screen).center()
         frameGm.moveCenter(centerPoint)
         self.move(frameGm.topLeft())
+    def getleniency(self):
+        return leniency.buttons().index(leniency.checkedButton())
 
 joystick=os.open(JOYSTICK,os.O_RDONLY|os.O_NONBLOCK) if os.path.exists(JOYSTICK) else False
 lastjoystick=time.time()
@@ -88,7 +99,11 @@ popupthread=False
 terminate=False
 leniency=False
 lastupdate=False
+lastsave=False
 tray=False
+
+config=configparser.ConfigParser()
+ini=Path.home() / '.pyrsi.ini'
 
 def watchjoystick():
     global lastjoystick
@@ -104,7 +119,7 @@ def watchjoystick():
 def update():
     if terminate:
         return
-    global pool,lastupdate
+    global pool,lastupdate,lastsave
     now=time.time()
     if lastupdate!=False and now-lastupdate>=10:#resume from suspension
         pool-=now-lastupdate
@@ -117,13 +132,18 @@ def update():
     if idle:
         pool-=1
     else:
-        pool+=LENIENCY[leniency.buttons().index(leniency.checkedButton())]
+        pool+=LENIENCY[window.getleniency()]
     if pool<0:
         pool=0
     text=describe()
     poollabel.setText(text)
     tray.setToolTip(text)
     threading.Timer(1,update).start()
+    if lastsave==False:
+        lastsave=now
+    elif now>=lastsave+SAVEPERIOD:
+        lastsave=now
+        saveconfig()
 
 def describe():
     if pool==0:
@@ -146,9 +166,25 @@ def setpopup():
     popupthread=threading.Timer(5*60,popup)
     popupthread.start()
     
+def loadconfig():
+    config.read(ini)
+    if 'data' in config:
+        data=config['data']
+        global pool,lastupdate
+        pool=float(data['pool'])
+        lastupdate=float(data['lastupdate'])
+        
+def saveconfig():
+    config['data']={}
+    config['data']['pool']=str(pool)
+    config['data']['lastupdate']=str(lastupdate)
+    config['data']['leniency']=str(window.getleniency())
+    config.write(open(ini,'w'))
+    
 if joystick!=False:
     joystickthread=threading.Thread(target=watchjoystick)
     joystickthread.start()
+loadconfig()
 window=Frame()
 setpopup()
 threading.Timer(1,update).start()
