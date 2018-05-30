@@ -4,9 +4,11 @@ from PyQt5.QtWidgets import QApplication,QWidget,QLabel,QPushButton,QVBoxLayout,
 from PyQt5.QtGui import QIcon
 from pathlib import Path
 
+SILENTPROCESSES=['dota2']
 JOYSTICK='/dev/input/js0'
 LENIENCY=[.5,1,1.5,2]
-SAVEPERIOD=60
+PERIODPOPUP=5*60
+PERIODSAVE=60
 
 class Frame(QWidget):
     def __init__(self):
@@ -34,8 +36,6 @@ class Frame(QWidget):
         leniency.addButton(severe)
         layout.addWidget(severe)
         if 'data' in config:
-            #print('leniency: '+str(int(config['data']['leniency'])))
-            #print(leniency.buttons()[int(config['data']['leniency'])])
             leniency.buttons()[int(config['data']['leniency'])].setChecked(True)
         #add / remove time
         self.addbuton("Add 10 minutes",layout,self.moretime)
@@ -141,7 +141,7 @@ def update():
     threading.Timer(1,update).start()
     if lastsave==False:
         lastsave=now
-    elif now>=lastsave+SAVEPERIOD:
+    elif now>=lastsave+PERIODSAVE:
         lastsave=now
         saveconfig()
 
@@ -154,16 +154,22 @@ def describe():
         return 'Rest for '+str(round(pool/60))+' minute(s)'
     return 'Rest for '+str(round(pool))+' second(s)'
 
+def checkfullscreen():
+    for name in SILENTPROCESSES:
+        if os.system(f'pidof {name}')==0:
+            return True
+    return False
+
 def popup():
     if terminate:
         return
-    if pool!=0:
+    if pool!=0 and not checkfullscreen():
         tray.showMessage('PyRsi',describe(),msecs=5*1000)
     setpopup()
     
 def setpopup():
     global popupthread
-    popupthread=threading.Timer(5*60,popup)
+    popupthread=threading.Timer(PERIODPOPUP,popup)
     popupthread.start()
     
 def loadconfig():
