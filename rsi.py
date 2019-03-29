@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication,QWidget,QLabel,QPushButton,QVBoxLayout,
 from PyQt5.QtGui import QIcon
 from pathlib import Path
 
-SILENTPROCESSES=['dota2']
+SILENTPROCESSES=['dota2','minetest','SC2.exe','RimWorldLinux.x86_64','Civ5XP','Javelin',]
 JOYSTICK='/dev/input/js0'
 LENIENCY=[.5,1,1.5,2]
 PERIODPOPUP=5*60
@@ -158,13 +158,17 @@ def checkfullscreen():
     for name in SILENTPROCESSES:
         if os.system(f'pidof {name}')==0:
             return True
+        if os.system(f'xprop -name {name}')==0:
+            return True
     return False
 
 def popup():
     if terminate:
         return
+    state=describe()
+    print(describe)
     if pool!=0 and not checkfullscreen():
-        tray.showMessage('PyRsi',describe(),msecs=5*1000)
+        tray.showMessage('PyRsi',state,msecs=5*1000)
     setpopup()
     
 def setpopup():
