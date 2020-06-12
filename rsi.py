@@ -1,10 +1,10 @@
 #!/usr/bin/python3
-import time,threading,os,subprocess,sys,configparser
+import time,threading,os,subprocess,sys,configparser,whitelist
 from PyQt5.QtWidgets import QApplication,QWidget,QLabel,QPushButton,QVBoxLayout,QRadioButton,QButtonGroup,QSystemTrayIcon,QMessageBox
 from PyQt5.QtGui import QIcon
 from pathlib import Path
 
-SILENTPROCESSES=['dota2','minetest','SC2.exe','RimWorldLinux.x86_64','Civ5XP','Javelin',]
+SILENTPROCESSES=[]
 JOYSTICK='/dev/input/js0'
 LENIENCY=[.5,1,1.5,2]
 PERIODPOPUP=5*60
@@ -184,6 +184,7 @@ def loadconfig():
         global pool,lastupdate
         pool=float(data['pool'])
         lastupdate=float(data['lastupdate'])
+    whitelist.setup(SILENTPROCESSES)
         
 def saveconfig():
     config['data']={}
