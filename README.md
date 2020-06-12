@@ -9,6 +9,10 @@ What packages you're going to need to have installed for this to work properly:
 * Python 3
 * xprintidle
 * python3-pyqt5
+* python3-appdirs (optional: for using an external configuration file)
+* python3-watchdog (optional: if installed, will watch said external configuration file for changes)
+
+The optional external configuration file is located at `/home/USER/.config/pyrsi/whitelist.cfg` on Linux. Check the comments there (or in the template `whitelist-template.cfg`) for instructions on how to use it. For other platforms, the location will be shown when launching from console (or check [the appdirs module's documentation](https://github.com/ActiveState/appdirs/blob/master/README.rst)). 
 
 This package doesn't have an installer so if you want it to start automatically when you log into your computer you'll have to set it up yourself. It should be pretty simple though, just make sure the script is executable (`chmod +x rsi.py` on Linux) and configure it to be called on system startup - how to go about doing it varies from system to system but all of them have an Autostart option which should be easy to set up (on KDE, for example just go to System Settings -> Startup and Shutdown -> Autostart). For other systems just do a quick search on Google or ask for help on your system's website, forum, mailing list or similar.
 
