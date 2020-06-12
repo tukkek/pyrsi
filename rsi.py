@@ -9,6 +9,7 @@ JOYSTICK='/dev/input/js0'
 LENIENCY=[.5,1,1.5,2]
 PERIODPOPUP=5*60
 PERIODSAVE=60
+INCREMENT=30
 
 class Frame(QWidget):
     def __init__(self):
@@ -38,17 +39,17 @@ class Frame(QWidget):
         if 'data' in config:
             leniency.buttons()[int(config['data']['leniency'])].setChecked(True)
         #add / remove time
-        self.addbuton("Add 10 minutes",layout,self.moretime)
-        self.addbuton("Remove 10 minutes",layout,self.lesstime)
+        self.addbuton(f"Add {INCREMENT} minutes",layout,self.moretime)
+        self.addbuton(f"Remove {INCREMENT} minutes",layout,self.lesstime)
         #hide to tray
         self.addbuton("Hide",layout,self.totray)
         self.setLayout(layout)
     def moretime(self):
         global pool
-        pool+=10*60
+        pool+=INCREMENT*60
     def lesstime(self):
         global pool
-        pool-=10*60
+        pool-=INCREMENT*60
         if pool<0:
             pool=0
     def addbuton(self,label,layout,action):
