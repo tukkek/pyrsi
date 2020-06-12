@@ -156,7 +156,7 @@ def describe():
 
 def checkfullscreen():
     for name in SILENTPROCESSES:
-        if os.system(f'pidof {name}')==0:
+        if os.system(f'pidof "{name}"')==0:
             return True
         if os.system(f'xprop -name {name}')==0:
             return True
