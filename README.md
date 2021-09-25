@@ -6,7 +6,7 @@ This is currently a Linux-only tool and takes into consideration gamepad activit
 
 What packages you're going to need to have installed for this to work properly:
 
-* Python 3
+* Python 3 https://www.python.org/downloads/
 * xprintidle
 * python3-pyqt5
 * python3-appdirs (optional: for using an external configuration file)
@@ -20,3 +20,12 @@ Other suggested RSI prevention tools, much more professional than PyRsi:
 
 * RSIBreak (for Linux) - easy to find and install via your distribution's package manager
 * Workrave (mainly for Windows) - http://www.workrave.org/download/
+
+# Windows script
+
+The `winrsi.py` script contained in this repository is a very simple, stand-alone RSI tool that I cooked up in fifteen minutes pending fully suporting Windows on the main program. It runs on a console window so you can either setup a shortcut for it (something like `cmd /C python C:\path\to\winrsi.py`) or run it manually from the terminal (`python C:\path\to\winrsi.py`).
+
+Requirements:
+
+* Python 3 https://www.python.org/downloads/
+* pywin32 (`pip install pywin32`)
