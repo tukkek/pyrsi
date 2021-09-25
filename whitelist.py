@@ -38,4 +38,5 @@ def setup(silentprocesses):
     o.schedule(Updater(),configdir)
     o.start()
   except ModuleNotFoundError:
+    print("python3-watchdog not found, whitelist auto-reloading won't be enabled.")
     return
