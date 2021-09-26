@@ -25,6 +25,8 @@ Other suggested RSI prevention tools, much more professional than PyRsi:
 
 The `winrsi.py` script contained in this repository is a very simple, stand-alone RSI tool that I cooked up in fifteen minutes pending fully suporting Windows on the main program. It runs on a console window so you can either setup a shortcut for it (something like `cmd /C python C:\path\to\winrsi.py`) or run it manually from the terminal (`python C:\path\to\winrsi.py`).
 
+Usage: `python winrsi.py [minutes to rest]`.
+
 Requirements:
 
 * Python 3 https://www.python.org/downloads/

@@ -1,9 +1,9 @@
-import win32api,time
+import win32api,time,sys
 
 MINUTE=60
 HOUR=MINUTE*60
 
-rest=0
+rest=0 if len(sys.argv)<2 else int(sys.argv[1])*60
 last=False
 
 def tick():
