@@ -9,7 +9,7 @@ JOYSTICK='/dev/input/js0'
 LENIENCY=[.5,1,1.5,2]
 PERIODPOPUP=5*60
 PERIODSAVE=60
-INCREMENT=30
+INCREMENT=60
 
 class Frame(QWidget):
     def __init__(self):
