@@ -7,9 +7,10 @@ from pathlib import Path
 SILENTPROCESSES=[]
 JOYSTICK='/dev/input/js0'
 LENIENCY=[.5,1,1.5,2]
-PERIODPOPUP=5*60
 PERIODSAVE=60
 INCREMENT=60
+MINUTE=60
+HOUR=60*MINUTE
 
 class Frame(QWidget):
     def __init__(self):
@@ -150,9 +151,9 @@ def describe():
     if pool==0:
         return 'All rested up!'
     if pool>=60*60:
-        return 'Rest for '+str(round(pool/(60*60)))+' hour(s)'
+        return 'Rest for '+str(round(pool/(HOUR)))+' hour(s)'
     if pool>=60:
-        return 'Rest for '+str(round(pool/60))+' minute(s)'
+        return 'Rest for '+str(round(pool/MINUTE))+' minute(s)'
     return 'Rest for '+str(round(pool))+' second(s)'
 
 def checkfullscreen():
@@ -167,14 +168,18 @@ def popup():
     if terminate:
         return
     state=describe()
-    print(describe)
-    if pool!=0 and not checkfullscreen():
+    p=pool
+    while p>=60:
+        p/=60
+    p=round(p)
+    print(state)
+    if (p<10 or p%10==0) and not checkfullscreen():
         tray.showMessage('PyRsi',state,msecs=5*1000)
     setpopup()
     
 def setpopup():
     global popupthread
-    popupthread=threading.Timer(PERIODPOPUP,popup)
+    popupthread=threading.Timer(10*MINUTE if pool==0 else MINUTE,popup)
     popupthread.start()
     
 def loadconfig():
