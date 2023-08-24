@@ -103,6 +103,7 @@ leniency=False
 lastupdate=False
 lastsave=False
 tray=False
+lastpopup=False
 
 config=configparser.ConfigParser()
 ini=Path.home() / '.pyrsi.ini'
@@ -165,21 +166,23 @@ def checkfullscreen():
     return False
 
 def popup():
+    global lastpopup
     if terminate:
         return
-    state=describe()
+    d=describe()
+    print(d)
     p=pool
     while p>=60:
         p/=60
     p=round(p)
-    print(state)
-    if (p<10 or p%10==0) and not checkfullscreen():
-        tray.showMessage('PyRsi',state,msecs=5*1000)
+    if (p<10 or p%10==0) and d!=lastpopup and not checkfullscreen():
+        lastpopup=d
+        tray.showMessage('PyRsi',d,msecs=5*1000)
     setpopup()
     
 def setpopup():
     global popupthread
-    popupthread=threading.Timer(10*MINUTE if pool==0 else MINUTE,popup)
+    popupthread=threading.Timer(10*MINUTE if pool<MINUTE else MINUTE,popup)
     popupthread.start()
     
 def loadconfig():
