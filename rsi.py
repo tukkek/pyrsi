@@ -1,10 +1,9 @@
 #!/usr/bin/python3
-import time,threading,os,subprocess,sys,configparser,whitelist
+import time,threading,os,subprocess,sys,configparser
 from PyQt5.QtWidgets import QApplication,QWidget,QLabel,QPushButton,QVBoxLayout,QRadioButton,QButtonGroup,QSystemTrayIcon,QMessageBox
 from PyQt5.QtGui import QIcon
 from pathlib import Path
 
-SILENTPROCESSES=[]
 JOYSTICK='/dev/input/js0'
 LENIENCY=[.5,1,1.5,2]
 PERIODSAVE=60
@@ -157,14 +156,6 @@ def describe():
         return 'Rest for '+str(round(pool/MINUTE))+' minute(s)'
     return 'Rest for '+str(round(pool))+' second(s)'
 
-def checkfullscreen():
-    for name in SILENTPROCESSES:
-        if os.system(f'pidof "{name}"')==0:
-            return True
-        if os.system(f'xprop -name {name}')==0:
-            return True
-    return False
-
 def popup():
     global lastpopup
     if terminate:
@@ -175,7 +166,7 @@ def popup():
     while p>=60:
         p/=60
     p=round(p)
-    if (p<10 or p%10==0) and d!=lastpopup and not checkfullscreen():
+    if (p<10 or p%10==0) and d!=lastpopup:
         lastpopup=d
         tray.showMessage('PyRsi',d,msecs=5*1000)
     setpopup()
@@ -192,7 +183,6 @@ def loadconfig():
         global pool,lastupdate
         pool=float(data['pool'])
         lastupdate=float(data['lastupdate'])
-    whitelist.setup(SILENTPROCESSES)
         
 def saveconfig():
     config['data']={}
