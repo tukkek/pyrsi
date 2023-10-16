@@ -41,8 +41,8 @@ class Window(PyQt5.QtWidgets.QWidget):
     b.clicked.connect(action)
     return b
     
-  def closeEvent(self, event):
-    prompt='Are you sure you want to disable PyRsi?'
+  def closeEvent(self,event):
+    prompt='Are you sure you want to exit?'
     y=PyQt5.QtWidgets.QMessageBox.Yes
     if PyQt5.QtWidgets.QMessageBox.question(self,'Exit',prompt,y,PyQt5.QtWidgets.QMessageBox.No)!=y:
       event.ignore()
@@ -59,8 +59,8 @@ class Window(PyQt5.QtWidgets.QWidget):
   def center(self):
     g=self.frameGeometry()
     d=PyQt5.QtWidgets.QApplication.desktop()
-    screen=d.screenNumber(d.cursor().pos())
-    c=d.screenGeometry(screen).center()
+    s=d.screenNumber(d.cursor().pos())
+    c=d.screenGeometry(s).center()
     g.moveCenter(c)
     self.move(g.topLeft())
 
@@ -76,7 +76,7 @@ class Popup:
     print(d)
     if d!=self.last:
       lastpopup=d
-      tray.icon.showMessage('PyRsi',d,msecs=5*1000)
+      tray.icon.showMessage('PyRsi',d,msecs=3*1000)
     self.thread=threading.Timer(HOUR,self.popup)
     self.thread.start()
 
@@ -84,25 +84,21 @@ class Db:
   def __init__(self):
     self.parser=configparser.ConfigParser()
     self.path=pathlib.Path.home()/'.pyrsi.ini'
-    self.lastsave=False
+    self.lastsave=time.time()
 
   def load(self):
     self.parser.read(self.path)
     if 'data' not in self.parser:
       return
-    data=self.parser['data']
     global pool,lastupdate
-    pool=float(data['pool'])
-    lastupdate=float(data['lastupdate'])
+    d=self.parser['data']
+    pool=float(d['pool'])
+    lastupdate=float(d['lastupdate'])
       
   def save(self):
     now=time.time()
-    if self.lastsave==False:
-      self.lastsave=now
-      return
     if now<self.lastsave+SAVE:
       return
-    print(self.lastsave)
     self.lastsave=now
     self.parser['data']={
       'pool':str(pool),
@@ -145,25 +141,24 @@ tray=False
 db=False
 pool=0
 
+def run(command):
+  return subprocess.Popen(command,stdout=subprocess.PIPE).stdout.read()
+
 def update():
   if window.exit:
     return
   global pool,lastupdate
   now=time.time()
-  if lastupdate!=False and now-lastupdate>=10:#resume from INI
+  if lastupdate and now-lastupdate>MINUTE:#account for shutdown, hibernate...
     pool-=now-lastupdate
   lastupdate=now
-  idle=True
-  if now-gamepad.lastupdate<=1:
-    idle=False
-  else:
-    idle=int(subprocess.Popen('xprintidle', stdout=subprocess.PIPE).stdout.read()[:-1])>1000
+  idle=now-gamepad.lastupdate>1 and int(run('xprintidle')[:-1])>1000
   pool+=-1 if idle else +1
   if pool<0:
     pool=0
-  text=describe()
-  window.pool.setText(text)
-  tray.icon.setToolTip(text)
+  d=describe()
+  window.pool.setText(d)
+  tray.icon.setToolTip(d)
   db.save()
   threading.Timer(1,update).start()
 
@@ -175,13 +170,12 @@ def describe():
   p=toperiod(n+datetime.timedelta(seconds=pool))
   return 'All rested up!' if toperiod(n)==p else f'Rest until {p.lower()}.'
 
-if __name__=='__main__':
-  db=Db()
-  db.load()
-  window=Window()
-  gamepad=Gamepad()
-  tray=Tray()
-  popup=Popup()
-  threading.Timer(1,update).start()
-  popup.popup()
-  sys.exit(app.exec_())
+db=Db()
+db.load()
+window=Window()
+gamepad=Gamepad()
+tray=Tray()
+popup=Popup()
+threading.Timer(1,update).start()
+popup.popup()
+sys.exit(app.exec_())
