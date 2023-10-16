@@ -1,12 +1,10 @@
 #!/usr/bin/python3
-#TODO refactor modules for joystick, popup, tray...
 import time,threading,os,subprocess,sys,configparser,datetime,math,pathlib,PyQt5.QtGui,PyQt5.QtWidgets
 
-JOYSTICKPATH='/dev/input/js0'
 MINUTE=60
 HOUR=60*MINUTE
 INCREMENT=3*HOUR
-PERSIST=MINUTE
+SAVE=MINUTE
 PERIODS={
   0:'Night',
   3:'Late night',
@@ -17,9 +15,6 @@ PERIODS={
   18:'Evening',
   21:'Late evening',
 }
-CONFIG=configparser.ConfigParser()
-INI=pathlib.Path.home()/'.pyrsi.ini'
-JOYSTICK=os.open(JOYSTICKPATH,os.O_RDONLY|os.O_NONBLOCK) if os.path.exists(JOYSTICKPATH) else False
 
 class Frame(PyQt5.QtWidgets.QWidget):
   def __init__(self):
@@ -51,9 +46,9 @@ class Frame(PyQt5.QtWidgets.QWidget):
     if PyQt5.QtWidgets.QMessageBox.question(self,'Exit',prompt,y,PyQt5.QtWidgets.QMessageBox.No)!=y:
       event.ignore()
       return
-    global terminate
-    popupthread.cancel()
-    terminate=True
+    global exit
+    popup.thread.cancel()
+    exit=True
     event.accept()
     app.quit()
       
@@ -69,31 +64,89 @@ class Frame(PyQt5.QtWidgets.QWidget):
     frameGm.moveCenter(c)
     self.move(frameGm.topLeft())
 
-lastjoystick=time.time()
-joystickthread=False
+class Popup:
+  def __init__(self):
+    self.thread=False
+    self.last=False
+  
+  def popup(self):
+    if exit:
+      return
+    d=describe()
+    print(d)
+    if d!=self.last:
+      lastpopup=d
+      tray.icon.showMessage('PyRsi',d,msecs=5*1000)
+    self.thread=threading.Timer(HOUR,self.popup)
+    self.thread.start()
+
+class Db:
+  def __init__(self):
+    self.parser=configparser.ConfigParser()
+    self.path=pathlib.Path.home()/'.pyrsi.ini'
+    self.lastsave=False
+
+  def load(self):
+    self.parser.read(self.path)
+    if 'data' not in self.parser:
+      return
+    data=self.parser['data']
+    global pool,lastupdate
+    pool=float(data['pool'])
+    lastupdate=float(data['lastupdate'])
+      
+  def save(self,now):
+    if self.lastsave==False:
+      self.lastsave=now
+      return
+    if now<self.lastsave+SAVE:
+      return
+    print(self.lastsave)
+    self.lastsave=now
+    self.parser['data']={
+      'pool':str(pool),
+      'lastupdate':str(lastupdate)
+    }
+    with open(self.path,'w') as ini:
+      self.parser.write(ini)
+
+class Gamepad:#TODO test with gamepad plugged after refactoring into class
+  def __init__(self):
+    self.path='/dev/input/js0'
+    self.device=os.path.exists(self.path) and os.open(self.path,os.O_RDONLY|os.O_NONBLOCK)
+    self.lastupdate=time.time()
+    if self.device:
+      t=threading.Thread(target=self.listen)
+      t.start()
+
+  def listen():
+    while not exit:
+      try:
+        os.read(device,8)
+        self.lastupdate=time.time()
+      except:#no new data
+        time.sleep(1)
+        
+class Tray:
+  def __init__(self):
+    i=PyQt5.QtWidgets.QSystemTrayIcon(window)
+    self.icon=i
+    i.setIcon(PyQt5.QtGui.QIcon(os.path.join(sys.path[0],'clock.png')))
+    i.setVisible(True)
+    i.activated.connect(window.activate)
+
 app=PyQt5.QtWidgets.QApplication(sys.argv)
 window=False
 pool=0
-popupthread=False
-terminate=False
+exit=False
 lastupdate=False
-lastsave=False
+popup=Popup()
+db=Db()
+gamepad=Gamepad()
 tray=False
-lastpopup=False
-
-def watchjoystick():
-  global lastjoystick
-  while True:
-    if terminate:
-      return
-    try:
-      os.read(JOYSTICK,8)
-      lastjoystick=time.time()
-    except:#no new data to read
-      time.sleep(1)
 
 def update():
-  if terminate:
+  if exit:
     return
   global pool,lastupdate,lastsave
   now=time.time()
@@ -101,7 +154,7 @@ def update():
     pool-=now-lastupdate
   lastupdate=now
   idle=True
-  if now-lastjoystick<=1:
+  if now-gamepad.lastupdate<=1:
     idle=False
   else:
     idle=int(subprocess.Popen('xprintidle', stdout=subprocess.PIPE).stdout.read()[:-1])>1000
@@ -110,12 +163,8 @@ def update():
     pool=0
   text=describe()
   window.pool.setText(text)
-  tray.setToolTip(text)
-  if lastsave==False:
-    lastsave=now
-  elif now>=lastsave+PERSIST:
-    lastsave=now
-    persist()
+  tray.icon.setToolTip(text)
+  db.save(now)
   threading.Timer(1,update).start()
 
 def toperiod(datetime):
@@ -128,46 +177,10 @@ def describe():
   until=toperiod(until)
   return 'All rested up!' if now==until else f'Rest until {until.lower()}.'
 
-def popup():
-  if terminate:
-    return
-  global lastpopup,popupthread
-  d=describe()
-  print(d)
-  if d!=lastpopup:
-    lastpopup=d
-    tray.showMessage('PyRsi',d,msecs=5*1000)
-  popupthread=threading.Timer(HOUR,popup)
-  popupthread.start()
-  
-def restore():
-  CONFIG.read(INI)
-  if 'data' in CONFIG:
-    data=CONFIG['data']
-    global pool,lastupdate
-    pool=float(data['pool'])
-    lastupdate=float(data['lastupdate'])
-    
-def persist():
-  CONFIG['data']={
-    'pool':str(pool),
-    'lastupdate':str(lastupdate)
-  }
-  CONFIG.write(open(INI,'w'))
-  
-def minimize():
-  global tray
-  tray=PyQt5.QtWidgets.QSystemTrayIcon(window)
-  tray.setIcon(PyQt5.QtGui.QIcon(os.path.join(sys.path[0],'clock.png')))
-  tray.setVisible(True)
-  tray.activated.connect(window.activate)
-
-if JOYSTICK!=False:
-  joystickthread=threading.Thread(target=watchjoystick)
-  joystickthread.start()
-restore()
-window=Frame()
-minimize()
-popup()
-threading.Timer(1,update).start()
-sys.exit(app.exec_())
+if __name__=='__main__':
+  db.load()
+  window=Frame()
+  threading.Timer(1,update).start()
+  tray=Tray()
+  popup.popup()
+  sys.exit(app.exec_())
