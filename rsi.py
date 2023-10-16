@@ -19,6 +19,7 @@ PERIODS={
 class Frame(PyQt5.QtWidgets.QWidget):
   def __init__(self):
     super().__init__()
+    self.exit=False
     self.setWindowTitle('RSI')  
     l=PyQt5.QtWidgets.QVBoxLayout();
     self.pool=PyQt5.QtWidgets.QLabel(describe())
@@ -46,9 +47,8 @@ class Frame(PyQt5.QtWidgets.QWidget):
     if PyQt5.QtWidgets.QMessageBox.question(self,'Exit',prompt,y,PyQt5.QtWidgets.QMessageBox.No)!=y:
       event.ignore()
       return
-    global exit
     popup.thread.cancel()
-    exit=True
+    self.exit=True
     event.accept()
     app.quit()
       
@@ -70,7 +70,7 @@ class Popup:
     self.last=False
   
   def popup(self):
-    if exit:
+    if window.exit:
       return
     d=describe()
     print(d)
@@ -120,7 +120,7 @@ class Gamepad:#TODO test with gamepad plugged after refactoring into class
       t.start()
 
   def listen():
-    while not exit:
+    while not window.exit:
       try:
         os.read(device,8)
         self.lastupdate=time.time()
@@ -138,7 +138,6 @@ class Tray:
 app=PyQt5.QtWidgets.QApplication(sys.argv)
 window=False
 pool=0
-exit=False
 lastupdate=False
 popup=Popup()
 db=Db()
@@ -146,9 +145,9 @@ gamepad=Gamepad()
 tray=False
 
 def update():
-  if exit:
+  if window.exit:
     return
-  global pool,lastupdate,lastsave
+  global pool,lastupdate
   now=time.time()
   if lastupdate!=False and now-lastupdate>=10:#resume from INI
     pool-=now-lastupdate
