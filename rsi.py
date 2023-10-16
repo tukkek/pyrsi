@@ -16,7 +16,7 @@ PERIODS={
   21:'Late evening',
 }
 
-class Frame(PyQt5.QtWidgets.QWidget):
+class Window(PyQt5.QtWidgets.QWidget):
   def __init__(self):
     super().__init__()
     self.exit=False
@@ -57,12 +57,12 @@ class Frame(PyQt5.QtWidgets.QWidget):
     self.center()
     
   def center(self):
-    frameGm=self.frameGeometry()
+    g=self.frameGeometry()
     d=PyQt5.QtWidgets.QApplication.desktop()
     screen=d.screenNumber(d.cursor().pos())
     c=d.screenGeometry(screen).center()
-    frameGm.moveCenter(c)
-    self.move(frameGm.topLeft())
+    g.moveCenter(c)
+    self.move(g.topLeft())
 
 class Popup:
   def __init__(self):
@@ -95,7 +95,8 @@ class Db:
     pool=float(data['pool'])
     lastupdate=float(data['lastupdate'])
       
-  def save(self,now):
+  def save(self):
+    now=time.time()
     if self.lastsave==False:
       self.lastsave=now
       return
@@ -136,13 +137,13 @@ class Tray:
     i.activated.connect(window.activate)
 
 app=PyQt5.QtWidgets.QApplication(sys.argv)
-window=False
-pool=0
 lastupdate=False
-popup=Popup()
-db=Db()
-gamepad=Gamepad()
+gamepad=False
+window=False
+popup=False
 tray=False
+db=False
+pool=0
 
 def update():
   if window.exit:
@@ -163,23 +164,24 @@ def update():
   text=describe()
   window.pool.setText(text)
   tray.icon.setToolTip(text)
-  db.save(now)
+  db.save()
   threading.Timer(1,update).start()
 
 def toperiod(datetime):
   return PERIODS[3*math.floor(datetime.hour/3)]
 
 def describe():
-  now=datetime.datetime.now()
-  until=now+datetime.timedelta(seconds=pool)
-  now=toperiod(now)
-  until=toperiod(until)
-  return 'All rested up!' if now==until else f'Rest until {until.lower()}.'
+  n=datetime.datetime.now()
+  p=toperiod(n+datetime.timedelta(seconds=pool))
+  return 'All rested up!' if toperiod(n)==p else f'Rest until {p.lower()}.'
 
 if __name__=='__main__':
+  db=Db()
   db.load()
-  window=Frame()
-  threading.Timer(1,update).start()
+  window=Window()
+  gamepad=Gamepad()
   tray=Tray()
+  popup=Popup()
+  threading.Timer(1,update).start()
   popup.popup()
   sys.exit(app.exec_())
