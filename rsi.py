@@ -3,18 +3,15 @@ import time,threading,os,subprocess,sys,configparser,datetime,math,pathlib,PyQt5
 
 MINUTE=60
 HOUR=60*MINUTE
-INCREMENT=3*HOUR
+INCREMENT=6*HOUR
 SAVE=MINUTE
 PERIODS={
   0:'Night',
-  3:'Late night',
   6:'Morning',
-  9:'Late morning',
   12:'Afternoon',
-  15:'Late afternoon',
   18:'Evening',
-  21:'Late evening',
 }
+RESTED='All rested up!'
 
 class Window(PyQt5.QtWidgets.QWidget):
   def __init__(self):
@@ -67,17 +64,16 @@ class Window(PyQt5.QtWidgets.QWidget):
 class Popup:
   def __init__(self):
     self.thread=False
-    self.last=False
   
   def popup(self):
     if window.exit:
       return
     d=describe()
     print(d)
-    if d!=self.last:
+    if d!=RESTED:
       lastpopup=d
       tray.icon.showMessage('PyRsi',d,msecs=3*1000)
-    self.thread=threading.Timer(HOUR,self.popup)
+    self.thread=threading.Timer(5*MINUTE,self.popup)
     self.thread.start()
 
 class Db:
@@ -163,12 +159,12 @@ def update():
   threading.Timer(1,update).start()
 
 def toperiod(datetime):
-  return PERIODS[3*math.floor(datetime.hour/3)]
+  return PERIODS[6*math.floor(datetime.hour/6)]
 
 def describe():
   n=datetime.datetime.now()
   p=toperiod(n+datetime.timedelta(seconds=pool))
-  return 'All rested up!' if toperiod(n)==p else f'Rest until {p.lower()}.'
+  return RESTED if toperiod(n)==p else f'Rest until {p.lower()}.'
 
 db=Db()
 db.load()
